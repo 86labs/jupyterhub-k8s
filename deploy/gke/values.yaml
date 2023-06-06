@@ -1,0 +1,73 @@
+hub:
+  extraConfig:
+    00-bind-url-config: | 
+      c.JupyterHub.bind_url = 'https://jupyterhub.prod.k8s.86labs.com'
+    01-keycloak-config: |
+      import json
+      from oauthenticator.generic import GenericOAuthenticator
+      # subclassing the GenericOAuthenticator in case we need to 
+      # enrich the user info
+      class CustomAuthClass(GenericOAuthenticator):
+          pass
+      
+      c.JupyterHub.authenticator_class = CustomAuthClass
+      with open("/etc/keycloak.json") as keycloak_json:
+          keycloak_data = json.load(keycloak_json)
+      c.CustomAuthClass.client_id = keycloak_data.get('CLIENT_ID')
+      c.CustomAuthClass.client_secret = keycloak_data.get('CLIENT_SECRET')
+      c.CustomAuthClass.token_url = keycloak_data.get('TOKEN_URL')
+      c.CustomAuthClass.userdata_url = keycloak_data.get('USERDATA_URL')
+      c.CustomAuthClass.authorize_url = keycloak_data.get('AUTHORIZATION_URL')
+      c.CustomAuthClass.userdata_params = {'state': 'state'}
+      c.CustomAuthClass.username_key = 'preferred_username'
+      c.CustomAuthClass.login_service = 'keycloak'
+      c.CustomAuthClass.enable_auth_state = True
+    02-kubespawner-config: |
+      c.JupyterHub.spawner_class = CustomKubeSpawner
+
+  extraVolumeMounts:
+    - name: keycloak-config
+      mountPath: "/etc/keycloak.json"
+      subPath: "keycloak.json"
+  extraVolumes:
+    - name: keycloak-config
+      secret: 
+        secretName: jupyterhub-oauth-keycloak
+scheduling:
+  userScheduler:
+    replicas: 1
+proxy:
+  service:
+    type: ClusterIP
+  https:
+    enabled: true
+    type: offload
+singleuser:
+  extraFiles:
+    notebook_config:
+      mountPath: "/usr/local/etc/jupyter/jupyter_notebook_config.py"
+      stringData: |
+          import os
+          os.environ['TEST_USER_PROPAGATION'] = os.environ.get('PROP_USER_INFO')
+          os.environ['TEST_PROFILE_PROPAGATION'] = os.environ.get('PROP_USER_PROFILE')
+
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ephemeral-pool
+  extraTolerations:
+    - key: ephemeral
+      value: "true"
+      operator: Equal
+      effect: "NoSchedule"
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true" # ssl termination is done before reaching this
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+  hosts:
+  - jupyterhub.prod.k8s.86labs.com
+  tls:
+  - secretName: jupyterhub-prod-k8s-86labs-com
+    hosts:
+      - jupyterhub.prod.k8s.86labs.com
