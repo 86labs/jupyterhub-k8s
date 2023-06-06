@@ -18,8 +18,10 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - run: |
-        docker build -t gfeldman8/hub-k8s \
-            --build-arg JUPYTERHUB_TAG=3.0.0-0.dev.git.6175.hf9af31a3 \
+    - env:
+        JUPYTERHUB_TAG: "3.0.0-0.dev.git.6175.hf9af31a3"
+      run: |
+        docker build -t gfeldman8/hub-k8s:${JUPYTERHUB_TAG} \
+            --build-arg JUPYTERHUB_TAG=${JUPYTERHUB_TAG} \
             -f hub/Dockerfile \
             hub/
