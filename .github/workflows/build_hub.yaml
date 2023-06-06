@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - .github/workflows/build_hub.yaml
       - hub/**
 jobs:
   build_base_and_prod:
