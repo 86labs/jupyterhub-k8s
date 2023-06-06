@@ -26,3 +26,4 @@ jobs:
             --build-arg JUPYTERHUB_TAG=${JUPYTERHUB_TAG} \
             -f hub/Dockerfile \
             hub/
+        docker push gfeldman8/hub-k8s:${JUPYTERHUB_TAG}
