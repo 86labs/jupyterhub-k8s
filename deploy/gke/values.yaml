@@ -1,4 +1,6 @@
 hub:
+  image:
+    name: gfeldman8/hub-k8s
   extraConfig:
     00-bind-url-config: | 
       c.JupyterHub.bind_url = 'https://jupyterhub.prod.k8s.86labs.com'
@@ -23,8 +25,9 @@ hub:
       c.CustomAuthClass.login_service = 'keycloak'
       c.CustomAuthClass.enable_auth_state = True
     02-kubespawner-config: |
-      c.JupyterHub.spawner_class = CustomKubeSpawner
-
+      c.JupyterHub.spawner_class = 'custom_kube_spawner.CustomKubeSpawner'
+  extraEnv:
+    PYTHONPATH: "/app/hub_custom:$(PYTHONPATH)"
   extraVolumeMounts:
     - name: keycloak-config
       mountPath: "/etc/keycloak.json"
