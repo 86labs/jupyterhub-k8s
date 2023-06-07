@@ -1,11 +1,13 @@
 hub:
   image:
     name: gfeldman8/hub-k8s
+    pullPolicy: Always
   extraConfig:
     00-bind-url-config: | 
       c.JupyterHub.bind_url = 'https://jupyterhub.prod.k8s.86labs.com'
     01-keycloak-config: |
-      c.JupyterHub.authenticator_class = 'custom_authenticators.keycloak_authenticator.KeycloakAuthenticator'
+      from custom_authenticators.keycloak_authenticator import KeycloakAuthenticator
+      c.JupyterHub.authenticator_class = KeycloakAuthenticator
     02-kubespawner-config: |
       c.JupyterHub.spawner_class = 'custom_kube_spawner.CustomKubeSpawner'
   extraEnv:
