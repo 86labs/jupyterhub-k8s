@@ -19,3 +19,5 @@ scikit-learn
 matplotlib
 seaborn
 google-cloud-storage
+s3contents[gcs]
+hybridcontents
