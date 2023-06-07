@@ -18,6 +18,5 @@ numpy
 scikit-learn
 matplotlib
 seaborn
-google-cloud-storage
-s3contents[gcs]==0.6.3
+s3contents[gcs]==0.10.1
 hybridcontents
