@@ -1,25 +1,60 @@
 hub:
-  image:
-    name: gfeldman8/hub-k8s
-    pullPolicy: Always
   extraConfig:
-    00-bind-url-config: | 
-      c.JupyterHub.bind_url = 'https://jupyterhub.prod.k8s.86labs.com'
-    01-keycloak-config: |
-      from custom_authenticators.keycloak_authenticator import KeycloakAuthenticator
-      c.JupyterHub.authenticator_class = KeycloakAuthenticator
-    02-kubespawner-config: |
-      c.JupyterHub.spawner_class = 'custom_kube_spawner.CustomKubeSpawner'
+    00_bind_url_config: | 
+
+  extraFiles:
+    keycloak_authenticator:
+      mountPath: /app/custom/keycloak_authenticator.py
+    custom_kube_spawner:
+      mountPath: /app/custom/custom_kube_spawner.py
+    bind_url_config:
+      mountPath: /usr/local/etc/jupyterhub/jupyterhub_config.d/00_bind_url_config.py
+      stringData: |
+        c.JupyterHub.bind_url = 'https://jupyterhub.prod.k8s.86labs.com'
+        c.JupyterHub.admin_access = True
+    keycloak_config:
+      mountPath: /usr/local/etc/jupyterhub/jupyterhub_config.d/01_keycloak_config.py
+      stringData: |
+        from keycloak_authenticator import KeycloakAuthenticator
+        c.JupyterHub.authenticator_class = KeycloakAuthenticator
+    spawner_config:
+      mountPath: /usr/local/etc/jupyterhub/jupyterhub_config.d/02_spawner_config.py
+      stringData: |
+        from custom_kube_spawner import CustomKubeSpawner
+        c.JupyterHub.spawner_class = CustomKubeSpawner
+
   extraEnv:
-    PYTHONPATH: "/app/hub_custom:$(PYTHONPATH)"
-  extraVolumeMounts:
-    - name: keycloak-config
-      mountPath: "/usr/local/etc/jupyterhub/jupyterhub_config.d/00_keycloak.json"
-      subPath: "keycloak.json"
-  extraVolumes:
-    - name: keycloak-config
-      secret: 
-        secretName: jupyterhub-oauth-keycloak
+    PYTHONPATH: "/app/custom:$(PYTHONPATH)"
+    OAUTH_CLIENT_ID:
+      valueFrom:
+        secretKeyRef:
+          name: jupyterhub-oauth-keycloak
+          key: OAUTH_CLIENT_ID
+    OAUTH_CLIENT_SECRET:
+      valueFrom:
+        secretKeyRef:
+          name: jupyterhub-oauth-keycloak
+          key: OAUTH_CLIENT_SECRET
+    OAUTH2_TOKEN_URL:
+      valueFrom:
+        secretKeyRef:
+          name: jupyterhub-oauth-keycloak
+          key: OAUTH2_TOKEN_URL
+    OAUTH2_USERDATA_URL:
+      valueFrom:
+        secretKeyRef:
+          name: jupyterhub-oauth-keycloak
+          key: OAUTH2_USERDATA_URL
+    OAUTH2_AUTHORIZE_URL:
+      valueFrom:
+        secretKeyRef:
+          name: jupyterhub-oauth-keycloak
+          key: OAUTH2_AUTHORIZE_URL
+    OAUTH_LOGOUT_REDIRECT_URL:
+      valueFrom:
+        secretKeyRef:
+          name: jupyterhub-oauth-keycloak
+          key: OAUTH_LOGOUT_REDIRECT_URL
 scheduling:
   userScheduler:
     replicas: 1
@@ -30,6 +65,8 @@ proxy:
     enabled: true
     type: offload
 singleuser:
+  cloudMetadata:
+    blockWithIptables: false
   extraFiles:
     notebook_config:
       mountPath: "/usr/local/etc/jupyter/jupyter_notebook_config.py"

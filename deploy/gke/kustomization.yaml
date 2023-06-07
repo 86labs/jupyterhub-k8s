@@ -3,9 +3,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 namespace: jupyterhub
 resources:
   - "secrets/keycloak.yaml"
-helmCharts:
-  - name: jupyterhub
-    version: 3.0.0-0.dev.git.6171.h0f4b2d0b
-    repo: https://hub.jupyter.org/helm-chart/
-    releaseName: jupyterhub
-    valuesFile: values.yaml
+  - "helm_rendered.yaml"
+  - "service_accounts/jupyterhub_user.yaml"

@@ -1,0 +1,7 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: "jupyterhub-user"
+  annotations: 
+    iam.gke.io/gcp-service-account: jupyterhub-user-gcp@labs-governance.iam.gserviceaccount.com
+automountServiceAccountToken: true

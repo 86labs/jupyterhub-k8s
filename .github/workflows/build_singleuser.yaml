@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/build_hub.yaml
-      - hub/**
+      - .github/workflows/build_singleuser.yaml
+      - images/singleuser/**
 jobs:
   build_base_and_prod:
     name: build base and image
@@ -19,11 +19,9 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - env:
-        JUPYTERHUB_TAG: "3.0.0-0.dev.git.6167.h43af1c55"
-      run: |
-        docker build -t gfeldman8/hub-k8s:${JUPYTERHUB_TAG} \
-            --build-arg JUPYTERHUB_TAG=${JUPYTERHUB_TAG} \
-            -f hub/Dockerfile \
-            hub/
-        docker push gfeldman8/hub-k8s:${JUPYTERHUB_TAG}
+    - run: |
+        cd images/singleuser/
+        docker run --rm --volume="$PWD:/io" --workdir=/io --user=root python:3.11-bullseye sh -c 'pip install pip-tools==6.* && pip-compile --resolver=backtracking --upgrade'
+        docker build -t gfeldman8/jupyterhub-k8s-singleuser:latest \
+            ./
+        docker push  gfeldman8/jupyterhub-k8s-singleuser:latest

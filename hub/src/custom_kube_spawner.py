@@ -1,6 +1,6 @@
 import json
 from kubespawner import KubeSpawner
-
+from kubernetes_asyncio.client import models as k8s
 
 class CustomKubeSpawner(KubeSpawner):
     def auth_state_hook(self, spawner, auth_state):
@@ -30,3 +30,15 @@ class CustomKubeSpawner(KubeSpawner):
             env['PROP_USER_PROFILE'] = self.user_options.get("profile","")
         self.log.info(f"Got environment variables {env}")
         return env
+    
+    def get_service_account_from_user_info(self, spawner):
+        user_info = spawner.userinfo
+        self.log.info(f"got user info in modify_pod_hook {user_info}")
+        return "jupyterhub-user"
+    
+    def modify_pod_hook(self, spawner, pod: k8s.V1Pod):
+        pod.spec.service_account = self.get_service_account_from_user_info(spawner)
+        pod.spec.service_account_name = self.get_service_account_from_user_info(spawner)
+        pod.spec.automount_service_account_token = True
+        self.log.info(f"got pod in modify_pod_hook {pod}")
+        return pod
