@@ -19,7 +19,10 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - run: |
+
+    - env:
+        DOCKER_BUILDKIT: 1
+      run: |
         cd images/singleuser/
         docker run --rm --volume="$PWD:/io" --workdir=/io --user=root python:3.11-bullseye sh -c 'pip install pip-tools==6.* && pip-compile --resolver=backtracking --upgrade'
         docker build -t gfeldman8/jupyterhub-k8s-singleuser:latest \
