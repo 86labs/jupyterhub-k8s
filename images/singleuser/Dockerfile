@@ -10,7 +10,7 @@
 # NOTE: If the image version is updated, also update it in ci/refreeze and
 #       hub's Dockerfile!
 #
-FROM python:3.11-bullseye as build-stage
+FROM python:3.9-bullseye as build-stage
 
 # Build wheels
 #
@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
         --find-links=/tmp/wheels/ \
         -r /tmp/requirements.txt
 
-WORKDIR ${HOME}
+WORKDIR /
 USER ${NB_USER}
 
 EXPOSE 8888

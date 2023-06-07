@@ -67,14 +67,35 @@ proxy:
 singleuser:
   cloudMetadata:
     blockWithIptables: false
+  extraEnv:
+    JUPYTERHUB_SINGLEUSER_APP: "jupyter_server.serverapp.ServerApp"
+
   extraFiles:
     notebook_config:
-      mountPath: "/usr/local/etc/jupyter/jupyter_notebook_config.py"
+      mountPath: "/usr/local/etc/jupyter/jupyter_server_config.py"
       stringData: |
           import os
+          from hybridcontents import HybridContentsManager
+          from s3contents.gcs import GCSContentsManager
+          from notebook.services.contents.largefilemanager import LargeFileManager
+
           os.environ['TEST_USER_PROPAGATION'] = os.environ.get('PROP_USER_INFO')
           os.environ['TEST_PROFILE_PROPAGATION'] = os.environ.get('PROP_USER_PROFILE')
-
+          
+          c.ServerApp.contents_manager_class = HybridContentsManager
+          c.HybridContentsManager.manager_classes = {
+              "": GCSContentsManager,
+              "scratch": LargeFileManager
+          }
+          c.HybridContentsManager.manager_kwargs = {
+            "": {"project": "labs-governance", "bucket": "jupyterhub-86labs-k8s-storage"},
+            "scratch": {"root_dir": "/home/jovyan"}
+          }
+          c.HybridContentsManager.managers = {
+            k: v(**c.HybridContentsManager.manager_kwargs.get(k)) for k,v in c.HybridContentsManager.manager_classes.items()
+          }
+          
+          
   nodeSelector:
     cloud.google.com/gke-nodepool: ephemeral-pool
   extraTolerations:

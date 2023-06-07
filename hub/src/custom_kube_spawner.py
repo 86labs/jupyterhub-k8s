@@ -19,7 +19,7 @@ class CustomKubeSpawner(KubeSpawner):
         Allowing us to dynamically generate profiles based on the user info
         """
         user_info = spawner.userinfo
-        image_options = {"display_name": "Image", "choices": {"pytorch": {"display_name": "Python 3 Training Notebook 1", "kubespawner_override": {"image": "training/python:2022.01.01"} } , "pytorch2": {"display_name": "Python 3 Training Notebook 2", "kubespawner_override": {"image": "training/python:2022.01.01"} } }}
+        image_options = {"display_name": "Image", "choices": {"custom": {"display_name": "Custom Single Server", "kubespawner_override": {"image": "gfeldman8/jupyterhub-k8s-singleuser:latest"} } , "pytorch2": {"display_name": "Python 3 Training Notebook 2", "kubespawner_override": {"image": "training/python:2022.01.01"} } }}
         return [{'display_name': f'Training Env for {user_info.get("name")}', 'slug': 'training-python', 'default': True, "profile_options": {"image": image_options} }, {'display_name': f'Prod Env for {user_info.get("name")}','slug': 'prod-python','default': False}]
 
     def get_env(self):
@@ -37,8 +37,13 @@ class CustomKubeSpawner(KubeSpawner):
         return "jupyterhub-user"
     
     def modify_pod_hook(self, spawner, pod: k8s.V1Pod):
+        # set service account based on user info
         pod.spec.service_account = self.get_service_account_from_user_info(spawner)
         pod.spec.service_account_name = self.get_service_account_from_user_info(spawner)
         pod.spec.automount_service_account_token = True
+        # set user root to read only file system so they do not store files there permanently
+        pod.spec.volumes.append(k8s.V1Volume(name="jupyter-root",empty_dir=k8s.V1EmptyDirVolumeSource()))
+        pod.spec.containers[0].volume_mounts.append(k8s.V1VolumeMount(name="jupyter-root", mount_path="/tmp/container",read_only=False))
+        
         self.log.info(f"got pod in modify_pod_hook {pod}")
         return pod
