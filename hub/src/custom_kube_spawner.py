@@ -44,6 +44,6 @@ class CustomKubeSpawner(KubeSpawner):
         # set user root to read only file system so they do not store files there permanently
         pod.spec.volumes.append(k8s.V1Volume(name="jupyter-root",empty_dir=k8s.V1EmptyDirVolumeSource()))
         pod.spec.containers[0].volume_mounts.append(k8s.V1VolumeMount(name="jupyter-root", mount_path="/tmp/container",read_only=False))
-        
+        pod.spec.containers[0].image_pull_policy = "Always"
         self.log.info(f"got pod in modify_pod_hook {pod}")
         return pod

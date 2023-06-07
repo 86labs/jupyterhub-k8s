@@ -76,7 +76,7 @@ singleuser:
       stringData: |
           import os
           from hybridcontents import HybridContentsManager
-          from s3contents.gcs import GCSContentsManager
+          from s3contents import GCSContentsManager
           from notebook.services.contents.largefilemanager import LargeFileManager
 
           os.environ['TEST_USER_PROPAGATION'] = os.environ.get('PROP_USER_INFO')
