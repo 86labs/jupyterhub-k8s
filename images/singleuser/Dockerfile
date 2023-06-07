@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
 # The final stage
 # ---------------
 #
-FROM python:3.11-slim-bullseye
+FROM python:3.9-slim-bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV NB_USER=jovyan \
