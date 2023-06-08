@@ -69,37 +69,18 @@ singleuser:
     blockWithIptables: false
   extraEnv:
     JUPYTERHUB_SINGLEUSER_APP: "jupyter_server.serverapp.ServerApp"
-
+    PYTHONPATH: "/app/custom:$(PYTHONPATH)"
   extraFiles:
+    custom_content_manager:
+      mountPath: "/app/custom/custom_content_manager.py"
     notebook_config:
       mountPath: "/usr/local/etc/jupyter/jupyter_server_config.py"
       stringData: |
-        import boto3
-        import requests
-        from s3contents import S3ContentsManager
-        sts_client = boto3.client('sts')
-        def irsa_refresh(this_s3contents_instance):
-            token_id_response = requests.get("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=aws-trust-1",headers={"Metadata-Flavor":"Google"})
-            sts_response = sts_client.assume_role_with_web_identity(
-                                DurationSeconds=3600,
-                                RoleArn='arn:aws:iam::469238831943:role/jupyterhub-gke-user',
-                                RoleSessionName='jupyterhub',
-                                WebIdentityToken=token_id_resp.text
-                           )
-            credentials = sts_response.get('Credentials')
-            this_s3contents_instance._boto3_session_expiration = credentials.get('Expiration')
-            this_s3contents_instance.log.info(f"boto3: {this_s3contents_instance._boto3_session_expiration}")
-            _boto3_session = boto3.session.Session(aws_access_key_id=credentials.get('AccessKeyId'),
-                                                   aws_secret_access_key=credentials.get('SecretAccessKey'),
-                                                   aws_session_token=credentials.get('SessionToken'),
-                                                   region_name='us-east-1')
-            this_s3contents_instance.boto3_session = _boto3_session
+        from custom_content_manager import CustomS3ContentsManager
+        c.ServerApp.contents_manager_class = CustomS3ContentsManager
+        c.CustomS3ContentsManager.iam_role = "arn:aws:iam::469238831943:role/jupyterhub-gke-user"
+        c.CustomS3ContentsManager.bucket = "jupyterhub-86labs-com"
         
-        c.ServerApp.contents_manager_class = S3ContentsManager
-        c.S3ContentsManager.init_s3_hook = irsa_refresh
-        c.S3ContentsManager.bucket = "jupyterhub-86labs-com"
-        c.S3ContentsManager.prefix = "notebooks/"
-
   nodeSelector:
     cloud.google.com/gke-nodepool: ephemeral-pool
   extraTolerations:

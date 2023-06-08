@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
         --find-links=/tmp/wheels/ \
         -r /tmp/requirements.txt
 
-WORKDIR /
+WORKDIR ${HOME}
 USER ${NB_USER}
 
 EXPOSE 8888
