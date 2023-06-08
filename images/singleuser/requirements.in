@@ -18,5 +18,5 @@ numpy
 scikit-learn
 matplotlib
 seaborn
-s3contents[gcs]==0.6.2
+s3contents
 hybridcontents

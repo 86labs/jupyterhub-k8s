@@ -1,2 +1,3 @@
 secrets/
 charts/
+helm_rendered.yaml
