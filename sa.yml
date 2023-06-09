@@ -1,0 +1,5 @@
+Kind: ServiceAccount
+apiVersion: v1
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::<prod account number>:role/jupyterhub-data-analytics-role"

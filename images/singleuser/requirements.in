@@ -20,3 +20,5 @@ matplotlib
 seaborn
 s3contents
 hybridcontents
+tensorflow
+keras
