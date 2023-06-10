@@ -51,6 +51,7 @@ RUN apt-get update \
         dnsutils \
         iputils-ping \
         tini \
+        graphviz \
         # requirement for nbgitpuller
         git \
  && rm -rf /var/lib/apt/lists/*
